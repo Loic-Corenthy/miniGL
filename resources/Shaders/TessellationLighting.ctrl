@@ -1,0 +1,48 @@
+#version 410 core
+
+/*! \remark REMEMBER: The Control Tessellation Shader is executed once per CP in the output patch */
+
+/* Number of control points in the output patch */
+layout (vertices = 3) out;
+
+uniform vec3 uEyeWorldPos;
+uniform float uMaxDistanceToCameraCoeff;
+
+/* Attributes of the INPUT Control Points */
+in vec3 worldPosition_cs_in[];
+in vec2 textureCoord_cs_in[];
+in vec3 normal_cs_in[];
+
+/* Attributes of the OUTPUT Control Points */
+out vec3 worldPosition_es_in[];
+out vec2 textureCoord_es_in[];
+out vec3 normal_es_in[];
+
+float tessellationLevel(float pDist0, float pDist1)
+{
+    float lAverageDist = (pDist0 + pDist1) * 0.5f;
+
+    return uMaxDistanceToCameraCoeff / (lAverageDist + 1.0f);
+}
+
+void main()
+{
+    /* Set attributes of the output patch control points */
+    textureCoord_es_in[gl_InvocationID] = textureCoord_cs_in[gl_InvocationID];
+    normal_es_in[gl_InvocationID] = normal_cs_in[gl_InvocationID];
+    worldPosition_es_in[gl_InvocationID] = worldPosition_cs_in[gl_InvocationID];
+
+    /* Compute distance between the camera and each control point */
+    float lEyeToContrlPoint0 = distance(uEyeWorldPos, worldPosition_es_in[0]);
+    float lEyeToContrlPoint1 = distance(uEyeWorldPos, worldPosition_es_in[1]);
+    float lEyeToContrlPoint2 = distance(uEyeWorldPos, worldPosition_es_in[2]);
+
+    /* Compute the tessellation levels */
+    /* For a triangle patch: gl_TessLevelOuter is size 3 and gl_TessLevelInner is size 1 */
+    /* For a square patch: gl_TessLevelOuter is size 4 and gl_TessLevelInner is size 2 */
+    /* REMEMBER: gl_TessLevelOuter[] roughly determines the number of segments on each edge and gl_TessLevelInner[0] roughly determines how many rings the triangle will contain. */
+    gl_TessLevelOuter[0] = tessellationLevel(lEyeToContrlPoint1, lEyeToContrlPoint2);
+    gl_TessLevelOuter[1] = tessellationLevel(lEyeToContrlPoint2, lEyeToContrlPoint0);
+    gl_TessLevelOuter[2] = tessellationLevel(lEyeToContrlPoint0, lEyeToContrlPoint1);
+    gl_TessLevelInner[0] = gl_TessLevelOuter[2];
+}

@@ -1,0 +1,98 @@
+#version 410 core
+
+/* REMEMBER: The Control Tessellation Shader is executed once per CP in the output patch */
+
+/* Number of control points in the output patch */
+layout (vertices = 1) out;
+
+uniform float uTessellationLevel;
+
+/* Attributes of the INPUT Control Points */
+in vec3 worldPosition_cs_in[];
+in vec2 textureCoord_cs_in[];
+in vec3 normal_cs_in[];
+
+/* Attribute of the output control point */
+struct OutputPatch
+{
+    vec3 worldPositionB030;
+    vec3 worldPositionB021;
+    vec3 worldPositionB012;
+    vec3 worldPositionB003;
+    vec3 worldPositionB102;
+    vec3 worldPositionB201;
+    vec3 worldPositionB300;
+    vec3 worldPositionB210;
+    vec3 worldPositionB120;
+    vec3 worldPositionB111;
+    vec3 normal[3];
+    vec2 texCoords[3];
+};
+
+/* Keyword "patch": the variable contains data which pertains to the entire patch and not the current output control point */
+patch out OutputPatch oPatch;
+
+vec3 projectToPlane(vec3 pPoint, vec3 pPlanePoint, vec3 pPlaneNormal)
+{
+    vec3 lPP = pPoint - pPlanePoint;
+    float lLength = dot(lPP, pPlaneNormal);
+    vec3 lProjectedPoint = lLength * pPlaneNormal;
+    return (pPoint - lProjectedPoint);
+}
+
+void computePositions()
+{
+    /* The original vertices stay the same */
+    oPatch.worldPositionB030 = worldPosition_cs_in[gl_InvocationID + 0];
+    oPatch.worldPositionB003 = worldPosition_cs_in[gl_InvocationID + 1];
+    oPatch.worldPositionB300 = worldPosition_cs_in[gl_InvocationID + 2];
+
+    /* Name the edges according to the opposite vertex */
+    vec3 lEdgeB300 = oPatch.worldPositionB003 - oPatch.worldPositionB030;
+    vec3 lEdgeB030 = oPatch.worldPositionB300 - oPatch.worldPositionB003;
+    vec3 lEdgeB003 = oPatch.worldPositionB030 - oPatch.worldPositionB300;
+
+    /* Create two points on each edge, one at a third and the other one at two thirds */
+    float lTwoThird = 2.0f / 3.0f;
+    oPatch.worldPositionB021 = oPatch.worldPositionB030 + (lEdgeB300 / 3.0f);
+    oPatch.worldPositionB012 = oPatch.worldPositionB030 + (lEdgeB300 * lTwoThird);
+    oPatch.worldPositionB102 = oPatch.worldPositionB003 + (lEdgeB030 / 3.0f);
+    oPatch.worldPositionB201 = oPatch.worldPositionB003 + (lEdgeB030 * lTwoThird);
+    oPatch.worldPositionB210 = oPatch.worldPositionB300 + (lEdgeB003 / 3.0f);
+    oPatch.worldPositionB120 = oPatch.worldPositionB300 + (lEdgeB003 * lTwoThird);
+
+    /* Project each previous midpoint on the plane defined by the nearest vertex and its normal */
+    oPatch.worldPositionB021 = projectToPlane(oPatch.worldPositionB021, oPatch.worldPositionB030, oPatch.normal[gl_InvocationID + 0]);
+    oPatch.worldPositionB120 = projectToPlane(oPatch.worldPositionB120, oPatch.worldPositionB030, oPatch.normal[gl_InvocationID + 0]);
+    oPatch.worldPositionB012 = projectToPlane(oPatch.worldPositionB012, oPatch.worldPositionB003, oPatch.normal[gl_InvocationID + 1]);
+    oPatch.worldPositionB102 = projectToPlane(oPatch.worldPositionB102, oPatch.worldPositionB003, oPatch.normal[gl_InvocationID + 1]);
+    oPatch.worldPositionB201 = projectToPlane(oPatch.worldPositionB201, oPatch.worldPositionB300, oPatch.normal[gl_InvocationID + 2]);
+    oPatch.worldPositionB210 = projectToPlane(oPatch.worldPositionB210, oPatch.worldPositionB300, oPatch.normal[gl_InvocationID + 2]);
+
+    /* Handle the center */
+    vec3 lCenter = (oPatch.worldPositionB003 + oPatch.worldPositionB030 + oPatch.worldPositionB300) / 3.0f;
+
+    oPatch.worldPositionB111 = (oPatch.worldPositionB021 + oPatch.worldPositionB012 + oPatch.worldPositionB102 + oPatch.worldPositionB201 + oPatch.worldPositionB210 + oPatch.worldPositionB120) / 6.0f;
+    oPatch.worldPositionB111 += (oPatch.worldPositionB111 - lCenter) / 2.0f;
+}
+
+void main()
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        oPatch.normal[i] = normal_cs_in[gl_InvocationID + i];
+        oPatch.texCoords[i] = textureCoord_cs_in[gl_InvocationID + i];
+    }
+
+    /* Compute the position of the control points that will be used to define the bezier curve defining the patch */
+    computePositions();
+
+    /* Compute the tessellation levels. Just need to set it once since all the vertices will use the same inner and outer values of tessellation level */
+    if (gl_InvocationID == 0)
+    {
+        gl_TessLevelOuter[0] = uTessellationLevel;
+        gl_TessLevelOuter[1] = uTessellationLevel;
+        gl_TessLevelOuter[2] = uTessellationLevel;
+        gl_TessLevelInner[0] = uTessellationLevel;
+    }
+}

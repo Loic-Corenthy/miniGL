@@ -1,0 +1,4 @@
+# Material file for quad2.obj
+
+newmtl quad2mtl
+	map_Kd diffuse.jpg
