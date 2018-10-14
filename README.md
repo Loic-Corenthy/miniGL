@@ -4,7 +4,7 @@ _miniGL_ is a set of C++ classes aiming at creating a small openGL based renderi
 The idea behind it was simply for me to learn a little more about openGL. **All the code is based on the tutorials provided by [ogldev](http://ogldev.atspace.co.uk "ogldev tutorials"). All the assets in the resource directory also come from ogldev. Some of them were modified to fit the current implementation.**
 
 ## Illustration
-
+![Ilustration](./documentation/images/illustration.png "Illustration of one of the scenes")
 
 ## Project structure
 The project is divided in two main parts:
