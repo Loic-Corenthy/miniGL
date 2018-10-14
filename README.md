@@ -3,9 +3,10 @@
 _miniGL_ is a set of C++ classes aiming at creating a small openGL based rendering engine.
 The idea behind it was simply for me to learn a little more about openGL. **All the code is based on the tutorials provided by [ogldev](http://ogldev.atspace.co.uk "ogldev tutorials"). All the assets in the resource directory also come from ogldev. Some of them were modified to fit the current implementation.**
 
+## Illustration
+
 
 ## Project structure
---------------------
 The project is divided in two main parts:
 
 * miniGL which contains all the code
@@ -13,7 +14,6 @@ The project is divided in two main parts:
 
 
 ## External dependencies
-------------------------
 This project requires the following external libraries:
 
    - [ImageMagick](https://www.imagemagick.org/script/index.php "image magick")
@@ -24,7 +24,6 @@ This project requires the following external libraries:
 
 
 ## Build and run on macOs
--------------------------
 Image magick, Assimp and GLFW3 can be installed using [brew](https://brew.sh/ "brew") whereas glfx and Ant Tweak Bar (ATB) have to be downloaded and installed manually.
 
 ### Install external dependencies with brew
@@ -113,11 +112,11 @@ ATB and glfx that are installed manually in the **external** directory.
 
 
 ## Build and run on Windows (using Microsoft Visual Studio)
------------------------------------------------------------
 You probably have to download and install all the external dependencies manually. The dependencies that provide pre-built libraries do so in _release_ in general. In the following, we will only consider setting up the Visual Studio Solution in _release_.
 
 ### Install external dependencies manually
-####ImageMagick
+
+#### ImageMagick
 You can download an installer which provides `CORE_RL_Magick++_.lib`
 
 #### Assimp
@@ -157,7 +156,6 @@ You can use CMake-GUI to configure the Visual Studio Solution
 	- In the miniGL_test project properties, under Configuration Properties / Debugging, set Working Directory to **$(ProjectDir)Release**
 
 ## Usage
---------
 
 ### Keyboard shortcuts
 1. Camera 
@@ -183,7 +181,6 @@ I unfortunately don't have time to fix those scenes in windows.
 3. In the _particles_ example, some particles are created at the origin (0,0,0) when they should not be
 
 ## Code documentation
----------------------
 The code is documented to be able to use [doxygen](http://www.doxygen.nl/ "doxygen").
 
 1. Download and intall doxygen 
